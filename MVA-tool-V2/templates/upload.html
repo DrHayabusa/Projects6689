@@ -1,0 +1,328 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>MVA Report Tool</title>
+    <style>
+        :root {
+            --bg: #f4f7f2;
+            --panel: #ffffff;
+            --ink: #122118;
+            --muted: #5e6d63;
+            --brand: #1d6f42;
+            --brand-dark: #0f3d2e;
+            --line: rgba(18, 33, 24, 0.1);
+            --critical: #b42318;
+            --high: #f97316;
+            --medium: #facc15;
+            --low: #22c55e;
+            --shadow: 0 24px 60px rgba(15, 61, 46, 0.12);
+        }
+
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            min-height: 100vh;
+            font-family: "Avenir Next", "Segoe UI", sans-serif;
+            color: var(--ink);
+            background:
+                radial-gradient(circle at top left, rgba(29, 111, 66, 0.15), transparent 30%),
+                linear-gradient(180deg, #f7faf7 0%, var(--bg) 100%);
+            display: grid;
+            place-items: center;
+            padding: 32px;
+        }
+
+        .shell {
+            width: min(1040px, 100%);
+            display: grid;
+            gap: 24px;
+        }
+
+        .hero {
+            display: grid;
+            grid-template-columns: 1.2fr 0.8fr;
+            gap: 24px;
+            align-items: stretch;
+        }
+
+        .card {
+            background: var(--panel);
+            border: 1px solid var(--line);
+            border-radius: 28px;
+            box-shadow: var(--shadow);
+        }
+
+        .intro {
+            padding: 36px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .intro::after {
+            content: "";
+            position: absolute;
+            inset: auto -60px -80px auto;
+            width: 220px;
+            height: 220px;
+            background: linear-gradient(135deg, rgba(29, 111, 66, 0.22), rgba(250, 204, 21, 0.18));
+            border-radius: 999px;
+        }
+
+        h1 {
+            margin: 0 0 12px;
+            font-size: clamp(2.6rem, 5vw, 4.8rem);
+            line-height: 0.95;
+            letter-spacing: -0.05em;
+        }
+
+        .eyebrow {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 14px;
+            border-radius: 999px;
+            background: rgba(29, 111, 66, 0.1);
+            color: var(--brand-dark);
+            font-weight: 700;
+            letter-spacing: 0.02em;
+            margin-bottom: 18px;
+        }
+
+        p {
+            margin: 0;
+            color: var(--muted);
+            font-size: 1.04rem;
+            line-height: 1.7;
+            max-width: 58ch;
+        }
+
+        .badges {
+            margin-top: 22px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .badge {
+            padding: 10px 14px;
+            border-radius: 14px;
+            background: #f5faf7;
+            border: 1px solid rgba(29, 111, 66, 0.16);
+            font-weight: 700;
+            color: var(--brand-dark);
+        }
+
+        .legend {
+            padding: 28px;
+            display: grid;
+            gap: 14px;
+            align-content: center;
+            background:
+                linear-gradient(180deg, rgba(15, 61, 46, 0.96), rgba(29, 111, 66, 0.96)),
+                var(--brand);
+            color: white;
+        }
+
+        .legend h2 {
+            margin: 0 0 8px;
+            font-size: 1.15rem;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+        }
+
+        .legend-row {
+            display: flex;
+            justify-content: space-between;
+            gap: 18px;
+            padding: 12px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+        }
+
+        .legend-row:last-child {
+            border-bottom: 0;
+        }
+
+        .dot {
+            width: 14px;
+            height: 14px;
+            border-radius: 999px;
+            display: inline-block;
+            margin-right: 10px;
+        }
+
+        .upload-card {
+            padding: 30px;
+        }
+
+        form {
+            display: grid;
+            gap: 20px;
+        }
+
+        .dropzone {
+            border: 2.5px dashed rgba(29, 111, 66, 0.35);
+            border-radius: 24px;
+            padding: 54px 24px;
+            text-align: center;
+            background:
+                linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(241, 248, 244, 0.96));
+            transition: transform 180ms ease, border-color 180ms ease, box-shadow 180ms ease;
+        }
+
+        .dropzone.dragover {
+            transform: translateY(-2px);
+            border-color: var(--brand);
+            box-shadow: 0 16px 32px rgba(29, 111, 66, 0.12);
+        }
+
+        .dropzone input {
+            display: none;
+        }
+
+        .dropzone strong {
+            display: block;
+            font-size: 1.4rem;
+            margin-bottom: 10px;
+        }
+
+        .dropzone span {
+            color: var(--muted);
+            line-height: 1.6;
+        }
+
+        .actions {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            gap: 16px;
+            align-items: center;
+        }
+
+        .note {
+            color: var(--muted);
+            line-height: 1.7;
+        }
+
+        button {
+            appearance: none;
+            border: 0;
+            border-radius: 18px;
+            padding: 16px 24px;
+            font-size: 1rem;
+            font-weight: 800;
+            color: white;
+            background: linear-gradient(135deg, var(--brand), var(--brand-dark));
+            cursor: pointer;
+            box-shadow: 0 14px 28px rgba(29, 111, 66, 0.18);
+        }
+
+        .error {
+            padding: 14px 18px;
+            border-radius: 16px;
+            background: rgba(180, 35, 24, 0.08);
+            color: var(--critical);
+            border: 1px solid rgba(180, 35, 24, 0.16);
+            font-weight: 700;
+        }
+
+        @media (max-width: 900px) {
+            .hero { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <main class="shell">
+        <section class="hero">
+            <article class="card intro">
+                <div class="eyebrow">MVA Report Tool</div>
+                <h1>Turn raw Tenable exports into patch-ready reports.</h1>
+                <p>
+                    Upload a Tenable SC or Tenable IO CSV and the tool will normalize the fields,
+                    calculate patch priority using your exploit matrix, score exposure out of 1000,
+                    and generate a polished analyst-ready Excel workbook.
+                </p>
+                <div class="badges">
+                    <div class="badge">Tenable SC</div>
+                    <div class="badge">Tenable IO</div>
+                    <div class="badge">Large CSV safe</div>
+                    <div class="badge">Runs locally</div>
+                </div>
+            </article>
+
+            <aside class="card legend">
+                <h2>Severity Palette</h2>
+                <div class="legend-row"><span><span class="dot" style="background:#b42318"></span>Critical</span><strong>P1/P2</strong></div>
+                <div class="legend-row"><span><span class="dot" style="background:#f97316"></span>High</span><strong>P1/P2</strong></div>
+                <div class="legend-row"><span><span class="dot" style="background:#facc15"></span>Medium</span><strong>P2/P3</strong></div>
+                <div class="legend-row"><span><span class="dot" style="background:#22c55e"></span>Low</span><strong>P2/P4</strong></div>
+            </aside>
+        </section>
+
+        <section class="card upload-card">
+            {% if error %}
+                <div class="error">{{ error }}</div>
+            {% endif %}
+            <form action="{{ url_for('upload_file') }}" method="post" enctype="multipart/form-data" id="upload-form">
+                <div class="dropzone" id="dropzone" role="button" tabindex="0" aria-label="Choose or drop a Tenable CSV">
+                    <input type="file" name="file" id="file-input" accept=".csv" required>
+                    <strong>Drop the Tenable export here</strong>
+                    <span>
+                        or click to browse. Accepted format: <strong>Tenable SC CSV</strong> and
+                        <strong>Tenable IO CSV</strong>.
+                    </span>
+                </div>
+                <div class="actions">
+                    <div class="note">
+                        Your data never leaves your machine. Everything runs locally and the upload
+                        plus generated workbook are cleaned up after download.
+                    </div>
+                    <button type="submit">Build Excel Report</button>
+                </div>
+            </form>
+        </section>
+    </main>
+
+    <script>
+        const dropzone = document.getElementById("dropzone");
+        const fileInput = document.getElementById("file-input");
+        const uploadForm = document.getElementById("upload-form");
+
+        dropzone.addEventListener("click", () => fileInput.click());
+        dropzone.addEventListener("keydown", (event) => {
+            if (event.key === "Enter" || event.key === " ") {
+                event.preventDefault();
+                fileInput.click();
+            }
+        });
+
+        ["dragenter", "dragover"].forEach((eventName) => {
+            dropzone.addEventListener(eventName, (event) => {
+                event.preventDefault();
+                dropzone.classList.add("dragover");
+            });
+        });
+
+        ["dragleave", "drop"].forEach((eventName) => {
+            dropzone.addEventListener(eventName, (event) => {
+                event.preventDefault();
+                dropzone.classList.remove("dragover");
+            });
+        });
+
+        dropzone.addEventListener("drop", (event) => {
+            const files = event.dataTransfer.files;
+            if (!files.length) return;
+            fileInput.files = files;
+            uploadForm.requestSubmit();
+        });
+
+        fileInput.addEventListener("change", () => {
+            if (fileInput.files.length) {
+                uploadForm.requestSubmit();
+            }
+        });
+    </script>
+</body>
+</html>

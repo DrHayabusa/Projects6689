@@ -1,0 +1,382 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>MVA Tool Results</title>
+    <style>
+        :root {
+            --canvas: #f3efe7;
+            --panel: #f8f4ec;
+            --ink: #14201c;
+            --muted: #5d655f;
+            --brand: #21384b;
+            --brand-dark: #162838;
+            --line: rgba(20, 32, 28, 0.08);
+            --critical: #c62828;
+            --high: #ef6c00;
+            --medium: #b78103;
+            --low: #2e7d32;
+            --priority: #0f1713;
+            --shadow: 0 30px 80px rgba(20, 32, 28, 0.1);
+        }
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            padding: 30px;
+            font-family: "Avenir Next", "Segoe UI", sans-serif;
+            color: var(--ink);
+            background:
+                radial-gradient(circle at top left, rgba(78, 108, 134, 0.16), transparent 26%),
+                linear-gradient(180deg, #f8f4ec 0%, var(--canvas) 100%);
+        }
+        .shell {
+            width: min(1300px, 100%);
+            margin: 0 auto;
+            display: grid;
+            gap: 24px;
+        }
+        .hero,
+        .matrix,
+        .group,
+        .stat {
+            background: linear-gradient(180deg, rgba(252, 247, 239, 0.98), rgba(241, 236, 227, 0.98));
+            border: 1px solid var(--line);
+            box-shadow: var(--shadow);
+        }
+        .hero {
+            border-radius: 30px;
+            display: grid;
+            grid-template-columns: 1.25fr 0.75fr;
+            gap: 24px;
+            padding: 34px;
+        }
+        .hero h1 {
+            margin: 0 0 12px;
+            font-size: clamp(2.3rem, 4vw, 4.2rem);
+            line-height: 0.96;
+            letter-spacing: -0.05em;
+        }
+        .hero p {
+            margin: 0;
+            color: var(--muted);
+            line-height: 1.75;
+            max-width: 62ch;
+        }
+        .hero-actions {
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+            justify-content: center;
+        }
+        .button {
+            text-decoration: none;
+            display: inline-flex;
+            justify-content: center;
+            align-items: center;
+            border-radius: 18px;
+            padding: 15px 22px;
+            font-weight: 900;
+        }
+        .button-primary {
+            color: #f7f4ec;
+            background: linear-gradient(135deg, var(--brand), #4e6c86);
+        }
+        .button-secondary {
+            color: var(--brand);
+            background: rgba(255, 255, 255, 0.6);
+            border: 1px solid rgba(33, 56, 75, 0.14);
+        }
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(5, minmax(0, 1fr));
+            gap: 16px;
+        }
+        .stat {
+            border-radius: 24px;
+            padding: 20px 22px;
+        }
+        .stat span {
+            display: block;
+            color: var(--muted);
+            font-size: 0.84rem;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+            margin-bottom: 10px;
+        }
+        .stat strong {
+            display: block;
+            font-size: clamp(1.6rem, 3vw, 2.7rem);
+            line-height: 1;
+            letter-spacing: -0.04em;
+        }
+        .critical strong { color: var(--critical); }
+        .high strong { color: var(--high); }
+        .medium strong { color: var(--medium); }
+        .low strong { color: var(--low); }
+        .brand strong { color: var(--brand); font-size: 1.35rem; }
+        .matrix {
+            border-radius: 28px;
+            padding: 28px;
+        }
+        .matrix-header {
+            display: flex;
+            justify-content: space-between;
+            gap: 16px;
+            align-items: end;
+            margin-bottom: 18px;
+        }
+        .matrix-header h2 {
+            margin: 0 0 8px;
+            font-size: 1.55rem;
+            letter-spacing: -0.03em;
+        }
+        .matrix-header p {
+            margin: 0;
+            color: var(--muted);
+            line-height: 1.7;
+            max-width: 64ch;
+        }
+        .matrix-grid {
+            display: grid;
+            grid-template-columns: 1.15fr repeat(4, 1fr);
+            gap: 12px;
+        }
+        .matrix-grid div {
+            padding: 14px 12px;
+            border-radius: 18px;
+            text-align: center;
+            font-weight: 900;
+        }
+        .matrix-head {
+            background: rgba(33, 56, 75, 0.08);
+            color: var(--brand);
+            font-size: 0.82rem;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+        }
+        .matrix-row {
+            text-align: left !important;
+            background: rgba(255, 255, 255, 0.55);
+        }
+        .p1 { background: rgba(198, 40, 40, 0.12); color: var(--critical); }
+        .p2 { background: rgba(239, 108, 0, 0.12); color: var(--high); }
+        .p3 { background: rgba(183, 129, 3, 0.16); color: var(--medium); }
+        .p4 { background: rgba(46, 125, 50, 0.12); color: var(--low); }
+        .preview-grid {
+            display: grid;
+            gap: 18px;
+        }
+        .group {
+            border-radius: 28px;
+            overflow: hidden;
+        }
+        .group-header {
+            padding: 20px 24px;
+            background: linear-gradient(135deg, var(--brand-dark), var(--brand));
+            color: #f7f4ec;
+            font-weight: 900;
+            line-height: 1.7;
+        }
+        .table-wrap {
+            overflow-x: auto;
+        }
+        table {
+            width: 100%;
+            min-width: 1340px;
+            border-collapse: collapse;
+        }
+        th, td {
+            padding: 12px 14px;
+            border-bottom: 1px solid var(--line);
+            text-align: left;
+            vertical-align: top;
+            font-size: 0.94rem;
+            line-height: 1.55;
+        }
+        th {
+            position: sticky;
+            top: 0;
+            background: #f4efe5;
+            color: var(--brand);
+            font-size: 0.79rem;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+        }
+        tr.severity-Critical { background: #fff1ef; }
+        tr.severity-High { background: #fff6ee; }
+        tr.severity-Medium { background: #fff8e6; }
+        tr.severity-Low { background: #f1f8f2; }
+        .pill {
+            display: inline-flex;
+            min-width: 54px;
+            justify-content: center;
+            align-items: center;
+            padding: 6px 10px;
+            border-radius: 999px;
+            font-size: 0.82rem;
+            font-weight: 900;
+        }
+        .severity-Critical .pill.severity { background: rgba(198, 40, 40, 0.12); color: var(--critical); }
+        .severity-High .pill.severity { background: rgba(239, 108, 0, 0.12); color: var(--high); }
+        .severity-Medium .pill.severity { background: rgba(183, 129, 3, 0.18); color: var(--medium); }
+        .severity-Low .pill.severity { background: rgba(46, 125, 50, 0.12); color: var(--low); }
+        .priority-P1 { background: rgba(198, 40, 40, 0.14); color: var(--critical); }
+        .priority-P2 { background: rgba(239, 108, 0, 0.14); color: var(--high); }
+        .priority-P3 { background: rgba(183, 129, 3, 0.2); color: var(--medium); }
+        .priority-P4 { background: rgba(46, 125, 50, 0.12); color: var(--low); }
+        .availability-yes { color: var(--critical); font-weight: 900; }
+        .availability-no { color: var(--muted); font-weight: 800; }
+        @media (max-width: 1040px) {
+            .hero,
+            .stats {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <main class="shell">
+        <section class="hero">
+            <div>
+                <h1>Workbook ready.</h1>
+                <p>
+                    The workbook is ready for download with grouped host summaries, exploit-aware
+                    patch priority, and the reduced analyst-facing columns from your SC and IO
+                    mapping rules.
+                </p>
+            </div>
+            <div class="hero-actions">
+                <a class="button button-primary" href="{{ url_for('download_report', job_id=job.id) }}">Download Workbook</a>
+                <a class="button button-secondary" href="{{ url_for('upload_page') }}">Process another file</a>
+            </div>
+        </section>
+
+        <section class="stats">
+            <article class="stat">
+                <span>Total IPs</span>
+                <strong>{{ "{:,}".format(job.stats.total_ips) }}</strong>
+            </article>
+            <article class="stat">
+                <span>Total Findings</span>
+                <strong>{{ "{:,}".format(job.stats.total_findings) }}</strong>
+            </article>
+            <article class="stat critical">
+                <span>Critical</span>
+                <strong>{{ "{:,}".format(job.stats.critical) }}</strong>
+            </article>
+            <article class="stat high">
+                <span>High</span>
+                <strong>{{ "{:,}".format(job.stats.high) }}</strong>
+            </article>
+            <article class="stat brand">
+                <span>Detected Export</span>
+                <strong>{{ job.source or "GENERIC" }}</strong>
+            </article>
+        </section>
+
+        <section class="stats">
+            <article class="stat critical">
+                <span>P1 Immediate</span>
+                <strong>{{ "{:,}".format(job.stats.p1) }}</strong>
+            </article>
+            <article class="stat high">
+                <span>P2 Priority</span>
+                <strong>{{ "{:,}".format(job.stats.p2) }}</strong>
+            </article>
+            <article class="stat medium">
+                <span>P3 Planned</span>
+                <strong>{{ "{:,}".format(job.stats.p3) }}</strong>
+            </article>
+            <article class="stat low">
+                <span>P4 Deferred</span>
+                <strong>{{ "{:,}".format(job.stats.p4) }}</strong>
+            </article>
+            <article class="stat brand">
+                <span>Preview Scope</span>
+                <strong>Top 3 IP groups</strong>
+            </article>
+        </section>
+
+        <section class="matrix">
+            <div class="matrix-header">
+                <div>
+                    <h2>Exploit Availability Priority Logic</h2>
+                    <p>
+                        Source fields used for exploit availability are SC <strong>Exploit?</strong>
+                        and IO <strong>Exploit Ease</strong>. The resulting value is combined with
+                        severity to assign P1, P2, P3, or P4.
+                    </p>
+                </div>
+            </div>
+            <div class="matrix-grid">
+                <div class="matrix-head">Exploit Availability</div>
+                <div class="matrix-head">Critical</div>
+                <div class="matrix-head">High</div>
+                <div class="matrix-head">Medium</div>
+                <div class="matrix-head">Low</div>
+                <div class="matrix-row">Yes / Available</div>
+                <div class="p1">P1</div>
+                <div class="p1">P1</div>
+                <div class="p2">P2</div>
+                <div class="p2">P2</div>
+                <div class="matrix-row">No / Unavailable</div>
+                <div class="p2">P2</div>
+                <div class="p2">P2</div>
+                <div class="p3">P3</div>
+                <div class="p4">P4</div>
+            </div>
+        </section>
+
+        <section class="preview-grid">
+            {% for group in job.preview_groups %}
+                <article class="group">
+                    <div class="group-header">
+                        {{ group.summary.ip_address }}
+                        {% if group.summary.dns_name %} ({{ group.summary.dns_name }}){% endif %}
+                        &nbsp;&nbsp;&nbsp;
+                        {% if group.summary.critical_count %}{{ group.summary.critical_count }} Critical{% endif %}
+                        {% if group.summary.high_count %} | {{ group.summary.high_count }} High{% endif %}
+                        {% if group.summary.medium_count %} | {{ group.summary.medium_count }} Medium{% endif %}
+                        {% if group.summary.low_count %} | {{ group.summary.low_count }} Low{% endif %}
+                        &nbsp;&nbsp;&nbsp; Total: {{ group.summary.total_findings }}
+                        &nbsp;&nbsp;&nbsp; Immediate Patch Needed: {{ group.summary.p1_count }}
+                    </div>
+                    <div class="table-wrap">
+                        <table>
+                            <thead>
+                                <tr>
+                                    {% for column in preview_columns %}
+                                        <th>{{ preview_labels[column] }}</th>
+                                    {% endfor %}
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for row in group.rows %}
+                                    <tr class="severity-{{ row['Severity']|replace(' ', '-') }}">
+                                        {% for column in preview_columns %}
+                                            <td>
+                                                {% if column == 'Severity' %}
+                                                    <span class="pill severity">{{ row[column] }}</span>
+                                                {% elif column == 'Patch Priority' %}
+                                                    <span class="pill priority-{{ row[column] }}">{{ row[column] }}</span>
+                                                {% elif column == 'Exploit?' %}
+                                                    <span class="{{ 'availability-yes' if row[column] == 'Yes' else 'availability-no' }}">{{ row[column] }}</span>
+                                                {% elif column == 'Asset Exposure (on 1000)' %}
+                                                    <strong>{{ row[column] }}</strong>
+                                                {% else %}
+                                                    {{ row[column] or '' }}
+                                                {% endif %}
+                                            </td>
+                                        {% endfor %}
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </article>
+            {% endfor %}
+        </section>
+    </main>
+</body>
+</html>

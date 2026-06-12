@@ -1,0 +1,254 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>MVA Tool Processing</title>
+    <style>
+        :root {
+            --canvas: #f3efe7;
+            --panel: #f8f4ec;
+            --ink: #14201c;
+            --muted: #5d655f;
+            --brand: #21384b;
+            --brand-soft: #d9e5ef;
+            --line: rgba(20, 32, 28, 0.1);
+            --critical: #c62828;
+            --shadow: 0 30px 80px rgba(20, 32, 28, 0.1);
+        }
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            min-height: 100vh;
+            display: grid;
+            place-items: center;
+            padding: 30px;
+            font-family: "Avenir Next", "Segoe UI", sans-serif;
+            color: var(--ink);
+            background:
+                radial-gradient(circle at top right, rgba(78, 108, 134, 0.18), transparent 28%),
+                linear-gradient(180deg, #f8f4ec 0%, var(--canvas) 100%);
+        }
+        .shell {
+            width: min(1100px, 100%);
+            display: grid;
+            grid-template-columns: 0.95fr 1.05fr;
+            gap: 24px;
+        }
+        .card {
+            background: linear-gradient(180deg, rgba(252, 247, 239, 0.98), rgba(241, 236, 227, 0.98));
+            border: 1px solid var(--line);
+            border-radius: 30px;
+            box-shadow: var(--shadow);
+        }
+        .summary,
+        .tracker {
+            padding: 32px;
+        }
+        .summary h1 {
+            margin: 0 0 12px;
+            font-size: clamp(2.2rem, 4vw, 4rem);
+            line-height: 0.96;
+            letter-spacing: -0.05em;
+        }
+        .summary p,
+        .tracker p {
+            margin: 0;
+            color: var(--muted);
+            line-height: 1.75;
+        }
+        .eyebrow {
+            display: inline-flex;
+            padding: 9px 14px;
+            border-radius: 999px;
+            background: rgba(33, 56, 75, 0.08);
+            color: var(--brand);
+            font-size: 0.9rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            margin-bottom: 18px;
+        }
+        .meter {
+            margin-top: 24px;
+            display: grid;
+            gap: 10px;
+        }
+        .meter-labels {
+            display: flex;
+            justify-content: space-between;
+            gap: 12px;
+            color: var(--muted);
+            font-weight: 800;
+        }
+        .meter-bar {
+            height: 18px;
+            border-radius: 999px;
+            background: #d9e1e8;
+            overflow: hidden;
+        }
+        .meter-fill {
+            height: 100%;
+            width: 0;
+            border-radius: inherit;
+            background: linear-gradient(90deg, #21384b, #4e6c86, #b78103);
+            transition: width 400ms ease;
+        }
+        .tracker h2 {
+            margin: 0 0 8px;
+            font-size: 1.4rem;
+            letter-spacing: -0.02em;
+        }
+        .steps {
+            margin-top: 20px;
+            display: grid;
+            gap: 14px;
+        }
+        .step {
+            display: grid;
+            grid-template-columns: 44px 1fr;
+            gap: 16px;
+            align-items: start;
+            padding: 18px;
+            border-radius: 20px;
+            border: 1px solid var(--line);
+            background: rgba(255, 255, 255, 0.5);
+        }
+        .step.active {
+            border-color: rgba(33, 56, 75, 0.24);
+            background: rgba(33, 56, 75, 0.06);
+        }
+        .step.done {
+            border-color: rgba(33, 56, 75, 0.16);
+            background: rgba(33, 56, 75, 0.08);
+        }
+        .step-icon {
+            width: 44px;
+            height: 44px;
+            display: grid;
+            place-items: center;
+            border-radius: 14px;
+            background: #e7edf2;
+            font-weight: 900;
+            color: var(--brand);
+        }
+        .step.active .step-icon,
+        .step.done .step-icon {
+            background: var(--brand);
+            color: #f7f4ec;
+        }
+        .step-copy strong {
+            display: block;
+            margin-bottom: 5px;
+            font-size: 1rem;
+        }
+        .error {
+            display: none;
+            margin-top: 18px;
+            padding: 14px 18px;
+            border-radius: 18px;
+            background: rgba(198, 40, 40, 0.08);
+            border: 1px solid rgba(198, 40, 40, 0.14);
+            color: var(--critical);
+            font-weight: 800;
+        }
+        .back {
+            margin-top: 22px;
+            display: inline-flex;
+            color: var(--brand);
+            font-weight: 800;
+            text-decoration: none;
+        }
+        @media (max-width: 980px) {
+            .shell { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <main class="shell">
+        <section class="card summary">
+            <div class="eyebrow">Local Processing</div>
+            <h1>Building a triage-first workbook for {{ job.filename }}</h1>
+            <p>
+                The upload is parsed, grouped, prioritized, and rendered into the final Excel
+                package on this machine only. The live tracker reflects the same parser and
+                workbook logic used to build the final export.
+            </p>
+            <div class="meter">
+                <div class="meter-labels">
+                    <span id="message">{{ job.message }}</span>
+                    <span id="percent">{{ job.progress }}%</span>
+                </div>
+                <div class="meter-bar">
+                    <div class="meter-fill" id="fill" style="width: {{ job.progress }}%"></div>
+                </div>
+            </div>
+            <a class="back" href="{{ url_for('upload_page') }}">Back to upload</a>
+        </section>
+
+        <section class="card tracker">
+            <h2>Execution Tracker</h2>
+            <p>Each stage updates live so you can see where the workbook is in the pipeline.</p>
+            <div class="error" id="error-box"></div>
+            <div class="steps" id="steps">
+                {% for step in job.steps %}
+                    <article class="step {{ step.status }}" data-step="{{ step.key }}">
+                        <div class="step-icon">{% if step.status == 'done' %}✓{% else %}{{ loop.index }}{% endif %}</div>
+                        <div class="step-copy">
+                            <strong>{{ step.label }}</strong>
+                            <span>
+                                {% if step.key == 'validate' %}Validate the source export, accepted columns, and file encoding.{% endif %}
+                                {% if step.key == 'group' %}Group records by asset to create the per-host remediation view.{% endif %}
+                                {% if step.key == 'clean' %}Map exploit availability, severity, exposure scoring, and priority assignment.{% endif %}
+                                {% if step.key == 'excel' %}Write the raw and analysed workbook sheets with the final formatting layer.{% endif %}
+                                {% if step.key == 'ready' %}Report is packaged and ready for download and spot-checking.{% endif %}
+                            </span>
+                        </div>
+                    </article>
+                {% endfor %}
+            </div>
+        </section>
+    </main>
+
+    <script>
+        const statusUrl = "{{ url_for('job_status', job_id=job.id) }}";
+        const fill = document.getElementById("fill");
+        const percent = document.getElementById("percent");
+        const message = document.getElementById("message");
+        const errorBox = document.getElementById("error-box");
+
+        function updateSteps(steps) {
+            steps.forEach((step, index) => {
+                const node = document.querySelector(`[data-step="${step.key}"]`);
+                if (!node) return;
+                node.className = `step ${step.status}`;
+                node.querySelector(".step-icon").textContent = step.status === "done" ? "✓" : String(index + 1);
+            });
+        }
+
+        async function poll() {
+            const response = await fetch(statusUrl, { cache: "no-store" });
+            const data = await response.json();
+            fill.style.width = `${data.progress}%`;
+            percent.textContent = `${data.progress}%`;
+            message.textContent = data.message;
+            updateSteps(data.steps);
+
+            if (data.status === "error") {
+                errorBox.style.display = "block";
+                errorBox.textContent = data.error || "The report could not be generated.";
+                return;
+            }
+
+            if (data.status === "ready" && data.redirect_url) {
+                window.location.href = data.redirect_url;
+                return;
+            }
+
+            window.setTimeout(poll, 1000);
+        }
+
+        window.setTimeout(poll, 1000);
+    </script>
+</body>
+</html>

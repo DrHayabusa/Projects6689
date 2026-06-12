@@ -1,0 +1,251 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Processing - MVA Report Tool</title>
+    <style>
+        :root {
+            --bg: #f5f8f4;
+            --panel: #ffffff;
+            --brand: #1d6f42;
+            --brand-dark: #0f3d2e;
+            --ink: #122118;
+            --muted: #607064;
+            --line: rgba(18, 33, 24, 0.1);
+            --critical: #b42318;
+            --warn: #f79009;
+            --shadow: 0 26px 60px rgba(15, 61, 46, 0.12);
+        }
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            min-height: 100vh;
+            display: grid;
+            place-items: center;
+            padding: 28px;
+            font-family: "Avenir Next", "Segoe UI", sans-serif;
+            color: var(--ink);
+            background:
+                radial-gradient(circle at top right, rgba(29, 111, 66, 0.14), transparent 28%),
+                linear-gradient(180deg, #f8fbf8 0%, var(--bg) 100%);
+        }
+        .panel {
+            width: min(860px, 100%);
+            background: var(--panel);
+            border: 1px solid var(--line);
+            border-radius: 28px;
+            box-shadow: var(--shadow);
+            overflow: hidden;
+        }
+        .hero {
+            padding: 30px 34px 24px;
+            background: linear-gradient(135deg, rgba(29, 111, 66, 0.08), rgba(250, 204, 21, 0.08));
+            border-bottom: 1px solid var(--line);
+        }
+        .hero h1 {
+            margin: 0 0 10px;
+            font-size: clamp(2rem, 4vw, 3.3rem);
+            line-height: 0.98;
+            letter-spacing: -0.04em;
+        }
+        .hero p {
+            margin: 0;
+            color: var(--muted);
+            line-height: 1.7;
+        }
+        .body {
+            padding: 30px 34px 34px;
+            display: grid;
+            gap: 24px;
+        }
+        .meter {
+            display: grid;
+            gap: 12px;
+        }
+        .meter-bar {
+            height: 16px;
+            border-radius: 999px;
+            background: #e4ece7;
+            overflow: hidden;
+        }
+        .meter-fill {
+            height: 100%;
+            width: 0;
+            border-radius: inherit;
+            background: linear-gradient(90deg, var(--brand), #2d8d57, #84cc16);
+            transition: width 500ms ease;
+            position: relative;
+        }
+        .meter-fill::after {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.28), transparent);
+            animation: sweep 2s linear infinite;
+        }
+        @keyframes sweep {
+            from { transform: translateX(-100%); }
+            to { transform: translateX(100%); }
+        }
+        .status-row {
+            display: flex;
+            justify-content: space-between;
+            gap: 12px;
+            color: var(--muted);
+            font-weight: 700;
+        }
+        .steps {
+            display: grid;
+            gap: 14px;
+        }
+        .step {
+            display: flex;
+            gap: 16px;
+            align-items: center;
+            padding: 18px;
+            border: 1px solid var(--line);
+            border-radius: 18px;
+            transition: transform 180ms ease, border-color 180ms ease;
+        }
+        .step.active {
+            transform: translateY(-1px);
+            border-color: rgba(29, 111, 66, 0.28);
+            background: rgba(29, 111, 66, 0.04);
+        }
+        .step.done {
+            border-color: rgba(29, 111, 66, 0.22);
+            background: rgba(29, 111, 66, 0.05);
+        }
+        .step-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 999px;
+            display: grid;
+            place-items: center;
+            background: #edf4ef;
+            color: var(--brand-dark);
+            font-weight: 800;
+            flex: 0 0 auto;
+        }
+        .step.active .step-icon {
+            background: var(--brand);
+            color: white;
+        }
+        .step.done .step-icon {
+            background: #22c55e;
+            color: white;
+        }
+        .step-copy strong {
+            display: block;
+            margin-bottom: 4px;
+            font-size: 1rem;
+        }
+        .step-copy span {
+            color: var(--muted);
+            line-height: 1.6;
+        }
+        .error {
+            padding: 16px 18px;
+            border-radius: 16px;
+            border: 1px solid rgba(180, 35, 24, 0.16);
+            background: rgba(180, 35, 24, 0.08);
+            color: var(--critical);
+            font-weight: 700;
+            display: none;
+        }
+        .back {
+            color: var(--brand-dark);
+            text-decoration: none;
+            font-weight: 700;
+        }
+    </style>
+</head>
+<body>
+    <main class="panel">
+        <section class="hero">
+            <h1>Processing {{ job.filename }}</h1>
+            <p>
+                The workbook is being prepared server-side. This page updates automatically while the
+                SC or IO export is parsed, grouped, prioritized, and written to Excel.
+            </p>
+        </section>
+
+        <section class="body">
+            <div class="meter">
+                <div class="status-row">
+                    <span id="message">{{ job.message }}</span>
+                    <span id="percent">{{ job.progress }}%</span>
+                </div>
+                <div class="meter-bar">
+                    <div class="meter-fill" id="fill" style="width: {{ job.progress }}%"></div>
+                </div>
+            </div>
+
+            <div class="error" id="error-box"></div>
+
+            <div class="steps" id="steps">
+                {% for step in job.steps %}
+                    <article class="step {{ step.status }}" data-step="{{ step.key }}">
+                        <div class="step-icon">{% if step.status == 'done' %}✓{% else %}{{ loop.index }}{% endif %}</div>
+                        <div class="step-copy">
+                            <strong>{{ step.label }}</strong>
+                            <span>
+                                {% if step.key == 'validate' %}Validate the uploaded export and identify its schema.{% endif %}
+                                {% if step.key == 'group' %}Aggregate findings by asset for per-host reporting.{% endif %}
+                                {% if step.key == 'clean' %}Map SC and IO fields, calculate exploit-driven priority, and score exposure.{% endif %}
+                                {% if step.key == 'excel' %}Write the two-sheet workbook with raw data and analysed output.{% endif %}
+                                {% if step.key == 'ready' %}Final report is ready for download and spot-checking.{% endif %}
+                            </span>
+                        </div>
+                    </article>
+                {% endfor %}
+            </div>
+
+            <a class="back" href="{{ url_for('upload_page') }}">Process another file</a>
+        </section>
+    </main>
+
+    <script>
+        const statusUrl = "{{ url_for('job_status', job_id=job.id) }}";
+        const fill = document.getElementById("fill");
+        const percent = document.getElementById("percent");
+        const message = document.getElementById("message");
+        const errorBox = document.getElementById("error-box");
+
+        function updateSteps(steps) {
+            steps.forEach((step, index) => {
+                const node = document.querySelector(`[data-step="${step.key}"]`);
+                if (!node) return;
+                node.className = `step ${step.status}`;
+                const icon = node.querySelector(".step-icon");
+                icon.textContent = step.status === "done" ? "✓" : String(index + 1);
+            });
+        }
+
+        async function poll() {
+            const response = await fetch(statusUrl, { cache: "no-store" });
+            const data = await response.json();
+            fill.style.width = `${data.progress}%`;
+            percent.textContent = `${data.progress}%`;
+            message.textContent = data.message;
+            updateSteps(data.steps);
+
+            if (data.status === "error") {
+                errorBox.style.display = "block";
+                errorBox.textContent = data.error || "The report could not be generated.";
+                return;
+            }
+
+            if (data.status === "ready" && data.redirect_url) {
+                window.location.href = data.redirect_url;
+                return;
+            }
+
+            window.setTimeout(poll, 1000);
+        }
+
+        window.setTimeout(poll, 1000);
+    </script>
+</body>
+</html>

@@ -1,0 +1,660 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>MVA Tool</title>
+    <style>
+        :root {
+            --canvas: #f3efe7;
+            --panel: rgba(255, 252, 246, 0.92);
+            --panel-strong: #fcf7ef;
+            --panel-soft: #f0e9dd;
+            --ink: #14201c;
+            --muted: #5d655f;
+            --brand: #21384b;
+            --brand-soft: #d9e5ef;
+            --brand-accent: #4e6c86;
+            --line: rgba(20, 32, 28, 0.1);
+            --critical: #c62828;
+            --high: #ef6c00;
+            --medium: #b78103;
+            --low: #2e7d32;
+            --shadow: 0 28px 70px rgba(20, 32, 28, 0.1);
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            font-family: "Avenir Next", "Segoe UI", sans-serif;
+            color: var(--ink);
+            background:
+                radial-gradient(circle at top right, rgba(78, 108, 134, 0.18), transparent 24%),
+                radial-gradient(circle at bottom left, rgba(198, 40, 40, 0.08), transparent 18%),
+                linear-gradient(180deg, #f9f5ed 0%, var(--canvas) 100%);
+            padding: 36px 28px 52px;
+        }
+
+        .shell {
+            width: min(1380px, 100%);
+            margin: 0 auto;
+            display: grid;
+            gap: 28px;
+        }
+
+        .top-grid {
+            display: grid;
+            grid-template-columns: minmax(0, 1.08fr) minmax(380px, 0.92fr);
+            gap: 28px;
+            align-items: start;
+        }
+
+        .card {
+            background: linear-gradient(180deg, var(--panel), rgba(244, 238, 228, 0.94));
+            border: 1px solid var(--line);
+            border-radius: 32px;
+            box-shadow: var(--shadow);
+            backdrop-filter: blur(10px);
+        }
+
+        .intro {
+            padding: 38px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .intro::after {
+            content: "";
+            position: absolute;
+            inset: auto -48px -54px auto;
+            width: 220px;
+            height: 220px;
+            border-radius: 999px;
+            background: radial-gradient(circle, rgba(78, 108, 134, 0.18), rgba(78, 108, 134, 0));
+            pointer-events: none;
+        }
+
+        .eyebrow {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 15px;
+            border-radius: 999px;
+            background: rgba(33, 56, 75, 0.08);
+            color: var(--brand);
+            font-size: 0.9rem;
+            font-weight: 800;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            margin-bottom: 18px;
+        }
+
+        h1 {
+            margin: 0 0 16px;
+            font-size: clamp(3rem, 5vw, 5.1rem);
+            line-height: 0.94;
+            letter-spacing: -0.06em;
+            max-width: 9.6ch;
+        }
+
+        .intro p {
+            margin: 0;
+            color: var(--muted);
+            font-size: 1.08rem;
+            line-height: 1.78;
+            max-width: 60ch;
+        }
+
+        .feature-strip {
+            margin-top: 24px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .feature {
+            display: inline-flex;
+            align-items: center;
+            padding: 11px 15px;
+            border-radius: 999px;
+            border: 1px solid rgba(33, 56, 75, 0.12);
+            background: rgba(255, 255, 255, 0.72);
+            color: var(--brand);
+            font-weight: 800;
+        }
+
+        .intro-metrics {
+            margin-top: 26px;
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 14px;
+        }
+
+        .metric {
+            padding: 18px;
+            border-radius: 22px;
+            background: rgba(255, 255, 255, 0.62);
+            border: 1px solid rgba(20, 32, 28, 0.08);
+        }
+
+        .metric span {
+            display: block;
+            margin-bottom: 8px;
+            color: var(--muted);
+            font-size: 0.78rem;
+            letter-spacing: 0.07em;
+            text-transform: uppercase;
+        }
+
+        .metric strong {
+            display: block;
+            font-size: 1.08rem;
+            line-height: 1.4;
+        }
+
+        .matrix {
+            padding: 30px;
+            background:
+                linear-gradient(180deg, rgba(252, 247, 239, 0.96), rgba(239, 233, 221, 0.96));
+        }
+
+        .matrix h2,
+        .upload-card h2 {
+            margin: 0 0 10px;
+            font-size: 1.6rem;
+            letter-spacing: -0.03em;
+        }
+
+        .matrix p,
+        .upload-card p,
+        .support-card p {
+            margin: 0;
+            color: var(--muted);
+            line-height: 1.74;
+        }
+
+        .source-fields {
+            margin-top: 18px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .source-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 14px;
+            border-radius: 999px;
+            background: rgba(33, 56, 75, 0.08);
+            border: 1px solid rgba(33, 56, 75, 0.12);
+            color: var(--brand);
+            font-size: 0.88rem;
+            font-weight: 800;
+        }
+
+        .matrix-grid {
+            margin-top: 22px;
+            display: grid;
+            grid-template-columns: minmax(170px, 1.2fr) repeat(4, minmax(78px, 1fr));
+            gap: 12px;
+        }
+
+        .matrix-grid div {
+            min-height: 72px;
+            padding: 15px 12px;
+            border-radius: 20px;
+            display: grid;
+            place-items: center;
+            text-align: center;
+            font-weight: 900;
+        }
+
+        .matrix-head {
+            min-height: 58px !important;
+            background: rgba(33, 56, 75, 0.08);
+            color: var(--brand);
+            font-size: 0.82rem;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+        }
+
+        .matrix-row {
+            align-content: center;
+            justify-items: start !important;
+            text-align: left !important;
+            background: rgba(255, 255, 255, 0.74);
+            color: var(--ink);
+            line-height: 1.35;
+        }
+
+        .p1 {
+            background: rgba(198, 40, 40, 0.12);
+            color: var(--critical);
+            border: 1px solid rgba(198, 40, 40, 0.16);
+        }
+
+        .p2 {
+            background: rgba(239, 108, 0, 0.12);
+            color: var(--high);
+            border: 1px solid rgba(239, 108, 0, 0.16);
+        }
+
+        .p3 {
+            background: rgba(183, 129, 3, 0.14);
+            color: var(--medium);
+            border: 1px solid rgba(183, 129, 3, 0.16);
+        }
+
+        .p4 {
+            background: rgba(46, 125, 50, 0.12);
+            color: var(--low);
+            border: 1px solid rgba(46, 125, 50, 0.16);
+        }
+
+        .upload-card {
+            padding: 34px;
+        }
+
+        .upload-layout {
+            display: grid;
+            grid-template-columns: minmax(0, 1.15fr) minmax(320px, 0.85fr);
+            gap: 24px;
+            align-items: start;
+        }
+
+        form {
+            display: grid;
+            gap: 18px;
+        }
+
+        .dropzone {
+            display: grid;
+            gap: 12px;
+            justify-items: center;
+            border: 2px dashed rgba(33, 56, 75, 0.2);
+            border-radius: 28px;
+            padding: 52px 26px;
+            background:
+                linear-gradient(180deg, rgba(255, 255, 255, 0.9), rgba(244, 238, 228, 0.9));
+            text-align: center;
+            cursor: pointer;
+            transition: transform 180ms ease, border-color 180ms ease, box-shadow 180ms ease, background 180ms ease;
+        }
+
+        .dropzone.dragover,
+        .dropzone:focus-visible {
+            transform: translateY(-2px);
+            border-color: var(--brand-accent);
+            box-shadow: 0 16px 34px rgba(33, 56, 75, 0.12);
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(232, 239, 246, 0.92));
+            outline: none;
+        }
+
+        .dropzone input {
+            display: none;
+        }
+
+        .upload-mark {
+            width: 76px;
+            height: 76px;
+            border-radius: 24px;
+            display: grid;
+            place-items: center;
+            background: linear-gradient(135deg, var(--brand), var(--brand-accent));
+            color: #fbf7ef;
+            font-size: 1.95rem;
+            font-weight: 900;
+            box-shadow: 0 18px 36px rgba(33, 56, 75, 0.2);
+        }
+
+        .dropzone strong {
+            font-size: 1.42rem;
+            letter-spacing: -0.03em;
+        }
+
+        .dropzone span {
+            max-width: 46ch;
+            color: var(--muted);
+            line-height: 1.74;
+        }
+
+        .filename {
+            min-height: 28px;
+            padding: 0 12px;
+            display: inline-flex;
+            align-items: center;
+            border-radius: 999px;
+            color: var(--brand);
+            font-size: 0.92rem;
+            font-weight: 800;
+            background: rgba(33, 56, 75, 0.08);
+        }
+
+        .actions {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            gap: 16px;
+            align-items: center;
+        }
+
+        .note {
+            color: var(--muted);
+            line-height: 1.72;
+            max-width: 54ch;
+        }
+
+        .button {
+            appearance: none;
+            border: 0;
+            border-radius: 18px;
+            padding: 16px 24px;
+            font-size: 1rem;
+            font-weight: 900;
+            color: #fbf7ef;
+            background: linear-gradient(135deg, var(--brand), var(--brand-accent));
+            cursor: pointer;
+            box-shadow: 0 16px 30px rgba(33, 56, 75, 0.18);
+        }
+
+        .button:hover {
+            filter: brightness(1.03);
+        }
+
+        .support-card {
+            padding: 24px;
+            border-radius: 26px;
+            background: rgba(255, 255, 255, 0.66);
+            border: 1px solid rgba(20, 32, 28, 0.08);
+            display: grid;
+            gap: 20px;
+        }
+
+        .support-card h3 {
+            margin: 0 0 8px;
+            font-size: 1.08rem;
+            letter-spacing: -0.02em;
+        }
+
+        .legend {
+            display: grid;
+            gap: 12px;
+        }
+
+        .legend-card {
+            padding: 15px 16px;
+            border-radius: 20px;
+            background: rgba(255, 255, 255, 0.74);
+            border: 1px solid rgba(20, 32, 28, 0.08);
+        }
+
+        .legend-card span {
+            display: block;
+            margin-bottom: 6px;
+            font-size: 0.78rem;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            color: var(--muted);
+        }
+
+        .legend-card strong {
+            display: block;
+            font-size: 1.06rem;
+            line-height: 1.45;
+        }
+
+        .critical { color: var(--critical); }
+        .high { color: var(--high); }
+        .medium { color: var(--medium); }
+        .low { color: var(--low); }
+
+        .support-list {
+            margin: 0;
+            padding-left: 18px;
+            color: var(--muted);
+            display: grid;
+            gap: 10px;
+            line-height: 1.66;
+        }
+
+        .error {
+            margin-bottom: 18px;
+            padding: 14px 18px;
+            border-radius: 18px;
+            border: 1px solid rgba(198, 40, 40, 0.18);
+            background: rgba(198, 40, 40, 0.08);
+            color: var(--critical);
+            font-weight: 800;
+        }
+
+        @media (max-width: 1120px) {
+            .top-grid,
+            .upload-layout,
+            .intro-metrics {
+                grid-template-columns: 1fr;
+            }
+
+            h1 {
+                max-width: 12ch;
+            }
+        }
+
+        @media (max-width: 700px) {
+            body {
+                padding: 18px 14px 28px;
+            }
+
+            .intro,
+            .matrix,
+            .upload-card {
+                padding: 24px;
+            }
+
+            .matrix-grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+
+            .matrix-head {
+                min-height: 52px !important;
+            }
+
+            .dropzone {
+                padding: 36px 18px;
+            }
+
+            .actions {
+                align-items: stretch;
+            }
+
+            .button {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <main class="shell">
+        <section class="top-grid">
+            <article class="card intro">
+                <div class="eyebrow">MVA Tool</div>
+                <h1>High-volume vulnerability triage, minus the cleanup.</h1>
+                <p>
+                    Upload a Tenable SC or Tenable IO export and the tool will normalize the raw
+                    fields, interpret exploit availability, apply your priority matrix, score
+                    asset exposure out of 1000, and generate a workbook built for faster patching
+                    decisions.
+                </p>
+                <div class="feature-strip">
+                    <div class="feature">Exploit-aware</div>
+                    <div class="feature">SC + IO normalized</div>
+                    <div class="feature">80k+ row ready</div>
+                    <div class="feature">Local processing</div>
+                </div>
+                <div class="intro-metrics">
+                    <div class="metric">
+                        <span>Accepted input</span>
+                        <strong>Tenable SC CSV and Tenable IO CSV exports</strong>
+                    </div>
+                    <div class="metric">
+                        <span>Priority engine</span>
+                        <strong>Severity plus exploit availability mapped into P1 to P4</strong>
+                    </div>
+                    <div class="metric">
+                        <span>Output shape</span>
+                        <strong>Analyst-first workbook with grouped host triage views</strong>
+                    </div>
+                </div>
+            </article>
+
+            <aside class="card matrix">
+                <h2>Priority Matrix</h2>
+                <p>
+                    Exploit availability is derived from the source export and then combined with
+                    severity to assign the patch lane. This mirrors the exact logic used in the
+                    parser.
+                </p>
+                <div class="source-fields">
+                    <div class="source-chip">SC field: <strong>Exploit?</strong></div>
+                    <div class="source-chip">IO field: <strong>Exploit Ease</strong></div>
+                </div>
+                <div class="matrix-grid">
+                    <div class="matrix-head">Exploit Availability</div>
+                    <div class="matrix-head">Critical</div>
+                    <div class="matrix-head">High</div>
+                    <div class="matrix-head">Medium</div>
+                    <div class="matrix-head">Low</div>
+                    <div class="matrix-row">Yes / Available</div>
+                    <div class="p1">P1</div>
+                    <div class="p1">P1</div>
+                    <div class="p2">P2</div>
+                    <div class="p2">P2</div>
+                    <div class="matrix-row">No / Unavailable</div>
+                    <div class="p2">P2</div>
+                    <div class="p2">P2</div>
+                    <div class="p3">P3</div>
+                    <div class="p4">P4</div>
+                </div>
+            </aside>
+        </section>
+
+        <section class="card upload-card">
+            {% if error %}
+                <div class="error">{{ error }}</div>
+            {% endif %}
+            <h2>Upload Tenable Export</h2>
+            <p>
+                Choose a raw SC or IO CSV and build the workbook locally. The picker opens once,
+                the file stays on this machine, and the source upload is cleaned up after the
+                report is generated.
+            </p>
+
+            <div class="upload-layout">
+                <form action="{{ url_for('upload_file') }}" method="post" enctype="multipart/form-data" id="upload-form">
+                    <div class="dropzone" id="dropzone" role="button" tabindex="0" aria-label="Choose or drop a Tenable CSV">
+                        <input type="file" name="file" id="file-input" accept=".csv" required>
+                        <div class="upload-mark">+</div>
+                        <strong>Drop the export here or browse for a file</strong>
+                        <span>
+                            Accepted files: Tenable SC CSV and Tenable IO CSV. Large exports are
+                            processed server-side with streaming and staged workbook generation so
+                            the browser stays responsive.
+                        </span>
+                        <div class="filename" id="filename">No file selected</div>
+                    </div>
+                    <div class="actions">
+                        <div class="note">
+                            The workbook is reduced to the fields your analysts care about most:
+                            asset identity, vulnerability name, CVE, severity, exploit
+                            availability, patch priority, exposure score, and remediation detail.
+                        </div>
+                        <button class="button" type="submit">Build Workbook</button>
+                    </div>
+                </form>
+
+                <aside class="support-card">
+                    <div>
+                        <h3>Severity Lanes</h3>
+                        <p>Official severity colors are carried through the workbook preview and result tables.</p>
+                    </div>
+                    <div class="legend">
+                        <div class="legend-card">
+                            <span>Critical</span>
+                            <strong class="critical">Immediate remediation lane</strong>
+                        </div>
+                        <div class="legend-card">
+                            <span>High</span>
+                            <strong class="high">Priority patch lane</strong>
+                        </div>
+                        <div class="legend-card">
+                            <span>Medium</span>
+                            <strong class="medium">Planned remediation lane</strong>
+                        </div>
+                        <div class="legend-card">
+                            <span>Low</span>
+                            <strong class="low">Deferred hardening lane</strong>
+                        </div>
+                    </div>
+                    <div>
+                        <h3>Processing Notes</h3>
+                        <ul class="support-list">
+                            <li>Source fields are auto-mapped for both SC and IO exports.</li>
+                            <li>Exploit availability is normalized before the patch lane is assigned.</li>
+                            <li>Large CSV uploads are staged for higher-row-count handling.</li>
+                        </ul>
+                    </div>
+                </aside>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        const dropzone = document.getElementById("dropzone");
+        const fileInput = document.getElementById("file-input");
+        const filename = document.getElementById("filename");
+
+        function openPicker() {
+            fileInput.click();
+        }
+
+        dropzone.addEventListener("click", openPicker);
+        dropzone.addEventListener("keydown", (event) => {
+            if (event.key === "Enter" || event.key === " ") {
+                event.preventDefault();
+                openPicker();
+            }
+        });
+
+        ["dragenter", "dragover"].forEach((eventName) => {
+            dropzone.addEventListener(eventName, (event) => {
+                event.preventDefault();
+                dropzone.classList.add("dragover");
+            });
+        });
+
+        ["dragleave", "drop"].forEach((eventName) => {
+            dropzone.addEventListener(eventName, (event) => {
+                event.preventDefault();
+                dropzone.classList.remove("dragover");
+            });
+        });
+
+        dropzone.addEventListener("drop", (event) => {
+            const files = event.dataTransfer.files;
+            if (!files.length) return;
+            fileInput.files = files;
+            filename.textContent = files[0].name;
+        });
+
+        fileInput.addEventListener("change", () => {
+            if (fileInput.files.length) {
+                filename.textContent = fileInput.files[0].name;
+            } else {
+                filename.textContent = "No file selected";
+            }
+        });
+    </script>
+</body>
+</html>
