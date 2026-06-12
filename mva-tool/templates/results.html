@@ -1,0 +1,297 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Results - MVA Report Tool</title>
+    <style>
+        :root {
+            --bg: #f4f7f2;
+            --panel: #ffffff;
+            --ink: #112117;
+            --muted: #607064;
+            --brand: #1d6f42;
+            --brand-dark: #0f3d2e;
+            --critical: #b42318;
+            --high: #f97316;
+            --medium: #facc15;
+            --low: #22c55e;
+            --line: rgba(18, 33, 24, 0.08);
+            --shadow: 0 26px 60px rgba(15, 61, 46, 0.12);
+        }
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            font-family: "Avenir Next", "Segoe UI", sans-serif;
+            background:
+                radial-gradient(circle at top left, rgba(29, 111, 66, 0.14), transparent 30%),
+                linear-gradient(180deg, #f8fbf8 0%, var(--bg) 100%);
+            color: var(--ink);
+            padding: 28px;
+        }
+        .shell {
+            width: min(1200px, 100%);
+            margin: 0 auto;
+            display: grid;
+            gap: 24px;
+        }
+        .hero {
+            display: flex;
+            justify-content: space-between;
+            align-items: end;
+            gap: 20px;
+            background: var(--panel);
+            border: 1px solid var(--line);
+            border-radius: 28px;
+            box-shadow: var(--shadow);
+            padding: 30px 34px;
+        }
+        .hero h1 {
+            margin: 0 0 10px;
+            font-size: clamp(2rem, 4vw, 3.4rem);
+            line-height: 0.98;
+            letter-spacing: -0.04em;
+        }
+        .hero p {
+            margin: 0;
+            color: var(--muted);
+            line-height: 1.7;
+            max-width: 60ch;
+        }
+        .actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+        .button {
+            text-decoration: none;
+            border-radius: 18px;
+            padding: 15px 22px;
+            font-weight: 800;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .button-primary {
+            color: white;
+            background: linear-gradient(135deg, var(--brand), var(--brand-dark));
+            box-shadow: 0 14px 28px rgba(29, 111, 66, 0.18);
+        }
+        .button-secondary {
+            color: var(--brand-dark);
+            border: 1px solid rgba(29, 111, 66, 0.18);
+            background: rgba(255,255,255,0.85);
+        }
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(5, minmax(0, 1fr));
+            gap: 16px;
+        }
+        .stat {
+            background: var(--panel);
+            border: 1px solid var(--line);
+            border-radius: 22px;
+            box-shadow: var(--shadow);
+            padding: 20px 22px;
+        }
+        .stat span {
+            display: block;
+            color: var(--muted);
+            font-size: 0.92rem;
+            margin-bottom: 10px;
+        }
+        .stat strong {
+            font-size: clamp(1.6rem, 3vw, 2.6rem);
+            line-height: 1;
+            letter-spacing: -0.03em;
+        }
+        .critical strong { color: var(--critical); }
+        .high strong { color: var(--high); }
+        .priority strong { color: var(--brand-dark); }
+        .source strong { color: var(--brand); font-size: 1.3rem; }
+        .preview-grid {
+            display: grid;
+            gap: 18px;
+        }
+        .group {
+            background: var(--panel);
+            border: 1px solid var(--line);
+            border-radius: 24px;
+            overflow: hidden;
+            box-shadow: var(--shadow);
+        }
+        .group-header {
+            padding: 18px 22px;
+            background: linear-gradient(135deg, var(--brand-dark), var(--brand));
+            color: white;
+            font-weight: 800;
+            line-height: 1.6;
+        }
+        .table-wrap {
+            overflow-x: auto;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 1280px;
+        }
+        th, td {
+            padding: 12px 14px;
+            border-bottom: 1px solid var(--line);
+            text-align: left;
+            vertical-align: top;
+            font-size: 0.94rem;
+            line-height: 1.55;
+        }
+        th {
+            position: sticky;
+            top: 0;
+            background: #f7faf8;
+            color: var(--brand-dark);
+            font-size: 0.82rem;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+        }
+        tr.severity-Critical { background: #fdecec; }
+        tr.severity-High { background: #fff3e8; }
+        tr.severity-Medium { background: #fffbea; }
+        tr.severity-Low { background: #eef9f2; }
+        .pill {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 44px;
+            padding: 6px 10px;
+            border-radius: 999px;
+            font-size: 0.82rem;
+            font-weight: 800;
+        }
+        .severity-Critical .pill.severity { background: rgba(180, 35, 24, 0.12); color: var(--critical); }
+        .severity-High .pill.severity { background: rgba(249, 115, 22, 0.12); color: #c2410c; }
+        .severity-Medium .pill.severity { background: rgba(250, 204, 21, 0.18); color: #9a6700; }
+        .severity-Low .pill.severity { background: rgba(34, 197, 94, 0.14); color: #027a48; }
+        .priority-P1 { background: #b42318; color: white; }
+        .priority-P2 { background: #f79009; color: #5f2a00; }
+        .priority-P3 { background: #facc15; color: #4e3a00; }
+        .priority-P4 { background: #22c55e; color: #0f5132; }
+        .muted {
+            color: var(--muted);
+        }
+        @media (max-width: 980px) {
+            .hero { flex-direction: column; align-items: start; }
+            .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+        }
+    </style>
+</head>
+<body>
+    <main class="shell">
+        <section class="hero">
+            <div>
+                <h1>Report ready for review.</h1>
+                <p>
+                    The workbook includes a full raw-data sheet plus a host-grouped analysed sheet with
+                    exploit-aware patch priority, exposure scoring, and the reduced field set you asked for.
+                </p>
+            </div>
+            <div class="actions">
+                <a class="button button-primary" href="{{ url_for('download_report', job_id=job.id) }}">Download Excel</a>
+                <a class="button button-secondary" href="{{ url_for('upload_page') }}">Process another file</a>
+            </div>
+        </section>
+
+        <section class="stats">
+            <article class="stat">
+                <span>Total IPs</span>
+                <strong>{{ "{:,}".format(job.stats.total_ips) }}</strong>
+            </article>
+            <article class="stat">
+                <span>Total Findings</span>
+                <strong>{{ "{:,}".format(job.stats.total_findings) }}</strong>
+            </article>
+            <article class="stat critical">
+                <span>Critical</span>
+                <strong>{{ "{:,}".format(job.stats.critical) }}</strong>
+            </article>
+            <article class="stat high">
+                <span>High</span>
+                <strong>{{ "{:,}".format(job.stats.high) }}</strong>
+            </article>
+            <article class="stat priority source">
+                <span>Detected Export</span>
+                <strong>{{ job.source or "GENERIC" }}</strong>
+            </article>
+        </section>
+
+        <section class="stats">
+            <article class="stat priority">
+                <span>Immediate Patch Needed (P1)</span>
+                <strong>{{ "{:,}".format(job.stats.p1) }}</strong>
+            </article>
+            <article class="stat">
+                <span>P2 Queue</span>
+                <strong>{{ "{:,}".format(job.stats.p2) }}</strong>
+            </article>
+            <article class="stat">
+                <span>P3 Queue</span>
+                <strong>{{ "{:,}".format(job.stats.p3) }}</strong>
+            </article>
+            <article class="stat">
+                <span>P4 Queue</span>
+                <strong>{{ "{:,}".format(job.stats.p4) }}</strong>
+            </article>
+            <article class="stat">
+                <span>Preview Scope</span>
+                <strong>Top 3 IP groups</strong>
+            </article>
+        </section>
+
+        <section class="preview-grid">
+            {% for group in job.preview_groups %}
+                <article class="group">
+                    <div class="group-header">
+                        {{ group.summary.ip_address }}
+                        {% if group.summary.dns_name %} ({{ group.summary.dns_name }}){% endif %}
+                        &nbsp;&nbsp;&nbsp;
+                        {% if group.summary.critical_count %}{{ group.summary.critical_count }} Critical{% endif %}
+                        {% if group.summary.high_count %} | {{ group.summary.high_count }} High{% endif %}
+                        {% if group.summary.medium_count %} | {{ group.summary.medium_count }} Medium{% endif %}
+                        {% if group.summary.low_count %} | {{ group.summary.low_count }} Low{% endif %}
+                        &nbsp;&nbsp;&nbsp; Total: {{ group.summary.total_findings }}
+                        &nbsp;&nbsp;&nbsp; Immediate Patch Needed: {{ group.summary.p1_count }}
+                    </div>
+                    <div class="table-wrap">
+                        <table>
+                            <thead>
+                                <tr>
+                                    {% for column in preview_columns %}
+                                        <th>{{ column }}</th>
+                                    {% endfor %}
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for row in group.rows %}
+                                    <tr class="severity-{{ row['Severity']|replace(' ', '-') }}">
+                                        {% for column in preview_columns %}
+                                            <td>
+                                                {% if column == 'Severity' %}
+                                                    <span class="pill severity">{{ row[column] }}</span>
+                                                {% elif column == 'Patch Priority' %}
+                                                    <span class="pill priority-{{ row[column] }}">{{ row[column] }}</span>
+                                                {% elif column == 'Asset Exposure (on 1000)' %}
+                                                    <strong>{{ row[column] }}</strong>
+                                                {% else %}
+                                                    {{ row[column] or '' }}
+                                                {% endif %}
+                                            </td>
+                                        {% endfor %}
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </article>
+            {% endfor %}
+        </section>
+    </main>
+</body>
+</html>
