@@ -77,13 +77,27 @@ Set these for the **api-server** (e.g. Replit secrets, or a `.env` — see
 
 ## Quickest start — one command, one link
 
+**macOS / Linux / Git Bash:**
 ```bash
 cd artifacts
 ./run.sh
 ```
 
-`run.sh` installs deps, builds the frontend + backend, and starts a **single
-server that serves both the UI and the API on one port**. It prints the link:
+**Windows (cmd or double-click):**
+```cmd
+cd artifacts
+run.cmd
+```
+
+> On Windows **cmd/PowerShell, do not use the bash form** `OLLAMA_URL=... ./run.sh`
+> — it sets nothing and won't run the shell script. Use `run.cmd` (which sets
+> sensible defaults), or set vars first with `set OLLAMA_URL=http://127.0.0.1:11434`.
+> Use `127.0.0.1`, not `localhost`: on Windows `localhost` can resolve to IPv6
+> `::1` while Ollama listens on IPv4, which causes a 500.
+
+`run.sh` / `run.cmd` install deps, build the frontend + backend, and start a
+**single server that serves both the UI and the API on one port**. It prints the
+link:
 
 ```
 >>> Open this link in Chrome or Edge:
