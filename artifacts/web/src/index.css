@@ -1,0 +1,109 @@
+@import "tailwindcss";
+
+/* Always dark. Tokens are HSL triples consumed via hsl(var(--token)). */
+:root {
+  --background: 240 20% 5%; /* deep charcoal #0a0a0f */
+  --foreground: 0 0% 98%;
+  --border: 240 10% 15%;
+  --ring: 213 100% 58%;
+  --card: 240 20% 7%;
+  --card-foreground: 0 0% 98%;
+  --primary: 213 100% 58%; /* Electric Blue */
+  --primary-foreground: 0 0% 100%;
+  --secondary: 152 75% 50%; /* Emerald Green */
+  --secondary-foreground: 0 0% 100%;
+  --muted: 240 10% 15%;
+  --muted-foreground: 240 5% 65%;
+  --destructive: 0 84% 60%;
+  --radius: 1rem;
+}
+
+.dark {
+  --background: 240 20% 5%;
+  --foreground: 0 0% 98%;
+  --border: 240 10% 15%;
+  --ring: 213 100% 58%;
+  --card: 240 20% 7%;
+  --card-foreground: 0 0% 98%;
+  --primary: 213 100% 58%;
+  --primary-foreground: 0 0% 100%;
+  --secondary: 152 75% 50%;
+  --secondary-foreground: 0 0% 100%;
+  --muted: 240 10% 15%;
+  --muted-foreground: 240 5% 65%;
+  --destructive: 0 84% 60%;
+  --radius: 1rem;
+}
+
+/* Map design tokens into Tailwind v4's color system so utilities like
+   bg-background, text-foreground, border-border, bg-primary work. */
+@theme inline {
+  --color-background: hsl(var(--background));
+  --color-foreground: hsl(var(--foreground));
+  --color-border: hsl(var(--border));
+  --color-ring: hsl(var(--ring));
+  --color-card: hsl(var(--card));
+  --color-card-foreground: hsl(var(--card-foreground));
+  --color-primary: hsl(var(--primary));
+  --color-primary-foreground: hsl(var(--primary-foreground));
+  --color-secondary: hsl(var(--secondary));
+  --color-secondary-foreground: hsl(var(--secondary-foreground));
+  --color-muted: hsl(var(--muted));
+  --color-muted-foreground: hsl(var(--muted-foreground));
+  --color-destructive: hsl(var(--destructive));
+
+  --radius-lg: var(--radius);
+  --radius-md: calc(var(--radius) - 0.25rem);
+  --radius-sm: calc(var(--radius) - 0.5rem);
+}
+
+@layer base {
+  * {
+    border-color: hsl(var(--border));
+  }
+  html,
+  body,
+  #root {
+    height: 100%;
+  }
+  body {
+    background-color: hsl(var(--background));
+    color: hsl(var(--foreground));
+    font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    overflow: hidden;
+    /* Disable text selection / callouts for the PTT experience. */
+    -webkit-user-select: none;
+    user-select: none;
+    -webkit-touch-callout: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+}
+
+.glass-card {
+  background: rgba(15, 15, 20, 0.6);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.5);
+}
+
+.shimmer-text {
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0.4) 0%,
+    rgba(255, 255, 255, 1) 50%,
+    rgba(255, 255, 255, 0.4) 100%
+  );
+  background-size: 200% auto;
+  color: transparent;
+  -webkit-background-clip: text;
+  background-clip: text;
+  animation: shimmer 2s linear infinite;
+}
+
+@keyframes shimmer {
+  to {
+    background-position: 200% center;
+  }
+}

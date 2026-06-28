@@ -1,0 +1,88 @@
+openapi: 3.0.3
+info:
+  title: ASSISTRAN API
+  version: 1.0.0
+  description: >
+    Backend API for ASSISTRAN, a two-way push-to-talk AI speech interpreter.
+    The browser never talks to Ollama directly — all translation requests are
+    proxied through this server.
+servers:
+  - url: /api
+paths:
+  /translate:
+    post:
+      operationId: translate
+      summary: Translate text between English and Hijazi Arabic
+      description: >
+        Sends the supplied text to the configured Ollama model and returns ONLY
+        the translated text. Source/target are BCP-47-ish locale strings such as
+        "en-US" and "ar-SA".
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TranslateRequest"
+      responses:
+        "200":
+          description: Successful translation
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TranslateResponse"
+        "400":
+          description: Invalid request body
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "502":
+          description: Upstream translation service error or empty response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "504":
+          description: Translation timed out
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+components:
+  schemas:
+    TranslateRequest:
+      type: object
+      required: [text, source, target]
+      properties:
+        text:
+          type: string
+          description: The text to translate.
+          example: hello
+        source:
+          type: string
+          description: Source locale (e.g. en-US).
+          example: en-US
+        target:
+          type: string
+          description: Target locale (e.g. ar-SA).
+          example: ar-SA
+    TranslateResponse:
+      type: object
+      required: [translation]
+      properties:
+        translation:
+          type: string
+          description: The translated text only — no commentary.
+          example: مرحباً
+    ErrorResponse:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: string

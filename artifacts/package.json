@@ -1,0 +1,19 @@
+{
+  "name": "assistran",
+  "private": true,
+  "version": "1.0.0",
+  "description": "ASSISTRAN — Two-way AI push-to-talk speech interpreter (English ⇄ Hijazi Arabic)",
+  "workspaces": [
+    "packages/*",
+    "api-server",
+    "web"
+  ],
+  "scripts": {
+    "dev": "npm run dev --workspaces --if-present",
+    "dev:api": "npm run dev --workspace api-server",
+    "dev:web": "npm run dev --workspace web",
+    "build": "npm run build --workspace api-server && npm run build --workspace web",
+    "start": "npm run start --workspace api-server",
+    "typecheck": "npm run typecheck --workspaces --if-present"
+  }
+}
