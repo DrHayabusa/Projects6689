@@ -70,29 +70,57 @@ Set these for the **api-server** (e.g. Replit secrets, or a `.env` — see
 | `MODEL_NAME` | `qwen2.5-coder:32b`                |
 | `PORT`       | `80` (optional, defaults to 80)    |
 
-## Getting started
+## Quickest start — one command, one link
+
+```bash
+cd artifacts
+./run.sh
+```
+
+`run.sh` installs deps, builds the frontend + backend, and starts a **single
+server that serves both the UI and the API on one port**. It prints the link:
+
+```
+>>> Open this link in Chrome or Edge:
+>>> http://localhost:8080
+```
+
+Override the defaults via env vars:
+
+```bash
+PORT=3000 OLLAMA_URL=http://my-ollama:11434 ./run.sh
+```
+
+> The host you run this on must be able to reach your Ollama server. Web Speech
+> API capture/playback runs in the browser, so **open the link in Chrome or
+> Edge** (Safari/Firefox aren't supported).
+
+## Dev mode (two servers, hot reload)
 
 ```bash
 cd artifacts
 npm install
 
-# Run backend (port 80) and frontend (port 5173) together:
-npm run dev
-
-# …or individually:
-npm run dev:api
-npm run dev:web
+# Backend on :8080, frontend on :5173 (Vite proxies /api -> backend):
+PORT=8080 npm run dev:api
+# in another terminal:
+API_TARGET=http://localhost:8080 npm run dev:web
+# open http://localhost:5173
 ```
 
 The Vite dev server proxies `/api` to the api-server, so relative fetch calls
 work without hardcoding ports.
 
-### Production build
+### Manual production build
 
 ```bash
 npm run build      # builds api-server -> dist/ and web -> dist/
-npm run start      # starts the api-server
+npm run start      # single server serves the API + the built UI on $PORT (default 80)
 ```
+
+When `web/dist` exists, the api-server automatically serves it (with SPA
+fallback) on the same port as the API — no separate static host or proxy needed.
+Set `WEB_DIST` to serve a build from a custom location.
 
 ## Verifying
 
@@ -100,9 +128,9 @@ npm run start      # starts the api-server
    ```bash
    curl http://46.152.253.223:11434/api/tags   # should list qwen2.5-coder:32b
    ```
-2. Test the translate endpoint:
+2. Test the translate endpoint (adjust the port to match how you started it):
    ```bash
-   curl -X POST http://localhost:80/api/translate \
+   curl -X POST http://localhost:8080/api/translate \
      -H "Content-Type: application/json" \
      -d '{"text":"hello","source":"en-US","target":"ar-SA"}'
    # Expected: {"translation":"مرحباً"} in ~15 seconds
