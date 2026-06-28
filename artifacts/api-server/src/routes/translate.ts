@@ -56,7 +56,14 @@ router.post("/translate", async (req, res) => {
       signal: controller.signal,
     });
     if (!ollamaRes.ok) {
-      res.status(502).json({ error: "Translation service error" });
+      const detail = await ollamaRes.text().catch(() => "");
+      console.error(
+        `[translate] Ollama at ${OLLAMA_URL} returned ${ollamaRes.status}: ${detail.slice(0, 300)}`,
+      );
+      res.status(502).json({
+        error: `Translation service error (Ollama returned ${ollamaRes.status}). ` +
+          `Check that model "${MODEL_NAME}" is pulled on the Ollama server.`,
+      });
       return;
     }
     const data = await ollamaRes.json() as { message?: { content?: string } };
@@ -70,7 +77,20 @@ router.post("/translate", async (req, res) => {
     if (err instanceof Error && err.name === "AbortError") {
       res.status(504).json({ error: "Translation timed out" });
     } else {
-      res.status(500).json({ error: "Unexpected error" });
+      // fetch() rejects (network-level failure) land here — almost always the
+      // server cannot reach OLLAMA_URL. Surface the underlying cause so it is
+      // diagnosable from the toast and the server logs.
+      const cause =
+        err instanceof Error && err.cause && typeof err.cause === "object"
+          ? (err.cause as { code?: string }).code
+          : undefined;
+      const detail = cause ?? (err instanceof Error ? err.message : "unknown error");
+      console.error(`[translate] could not reach Ollama at ${OLLAMA_URL}:`, err);
+      res.status(500).json({
+        error:
+          `Could not reach the translation service at ${OLLAMA_URL} (${detail}). ` +
+          `Check that OLLAMA_URL is correct and that Ollama is running and reachable from this machine.`,
+      });
     }
   } finally {
     clearTimeout(timeout);
