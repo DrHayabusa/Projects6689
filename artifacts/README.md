@@ -64,11 +64,16 @@ artifacts/
 Set these for the **api-server** (e.g. Replit secrets, or a `.env` — see
 `.env.example`):
 
-| Variable     | Value                              |
-| ------------ | ---------------------------------- |
-| `OLLAMA_URL` | `http://46.152.253.223:11434`      |
-| `MODEL_NAME` | `qwen2.5-coder:32b`                |
-| `PORT`       | `80` (optional, defaults to 80)    |
+| Variable     | Value                                                                 |
+| ------------ | --------------------------------------------------------------------- |
+| `OLLAMA_URL` | `http://127.0.0.1:11434` if Ollama is on the **same** machine, or `http://<host>:11434` for a remote one |
+| `MODEL_NAME` | `qwen2.5-coder:32b`                                                    |
+| `PORT`       | `8080` via `run.sh` (the server itself defaults to `80`)              |
+
+> **Important:** Ollama binds to `127.0.0.1` by default. If the app runs on the
+> same machine as Ollama, use `http://127.0.0.1:11434` — pointing `OLLAMA_URL`
+> at the machine's **public IP** will get `ECONNREFUSED` (→ 500), because Ollama
+> isn't listening on the public interface.
 
 ## Quickest start — one command, one link
 

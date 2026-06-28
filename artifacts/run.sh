@@ -9,7 +9,9 @@
 set -euo pipefail
 cd "$(dirname "$0")"
 
-export OLLAMA_URL="${OLLAMA_URL:-http://46.152.253.223:11434}"
+# Default to a local Ollama (same machine). Override OLLAMA_URL for a remote one,
+# e.g. OLLAMA_URL=http://46.152.253.223:11434 ./run.sh
+export OLLAMA_URL="${OLLAMA_URL:-http://127.0.0.1:11434}"
 export MODEL_NAME="${MODEL_NAME:-qwen2.5-coder:32b}"
 export PORT="${PORT:-8080}"
 
